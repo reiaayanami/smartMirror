@@ -11,19 +11,46 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from urllib.parse import quote
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 import os
+from django.core.exceptions import ImproperlyConfigured
 from closet.database_functions import fetch_closet_inventory
 
 NOTION_API_KEY = os.getenv("NOTION_API_KEY")
 NOTION_TASK_DB_ID = os.getenv("NOTION_TASK_DB_ID")
 NOTION_HABIT_DB_ID = os.getenv("NOTION_HABIT_DB_ID")
-GOOGLE_CALENDAR_IDS = os.getenv("GOOGLE_CALENDAR_IDS", "").split(",")
+GOOGLE_CALENDAR_IDS = [
+    x.strip() for x in os.getenv("GOOGLE_CALENDAR_IDS", "").split(",") if x.strip()
+]
 GOOGLE_CALENDAR_CRED_PATH = os.getenv("GOOGLE_CALENDAR_CRED_PATH")
-CLOSET_INVENTORY = fetch_closet_inventory(os.getenv("CLOSET_INVENTORY_DB_ID"))
-OUTFITS_DB_ID=os.getenv("OUTFITS_DB_ID", "")
+# CLOSET_INVENTORY = fetch_closet_inventory(os.getenv("CLOSET_INVENTORY_DB_ID"))
+CLOSET_INVENTORY = {}
+OUTFITS_DB_ID = os.getenv("OUTFITS_DB_ID", "")
+
+# GlowMirror / Raspberry Pi defaults
+MIRROR_NAME = os.getenv("MIRROR_NAME", "GlowMirror")
+MIRROR_TIMEZONE = os.getenv("MIRROR_TIMEZONE", "Europe/Kyiv")
+WEATHER_LAT = float(os.getenv("WEATHER_LAT", "50.4501"))
+WEATHER_LON = float(os.getenv("WEATHER_LON", "30.5234"))
+WEATHER_CITY = os.getenv("WEATHER_CITY", "Київ")
+WEATHER_UNIT = os.getenv("WEATHER_UNIT", "celsius")  # celsius | fahrenheit
+SOUNDCLOUD_PLAYLIST_URL = os.getenv(
+    "SOUNDCLOUD_PLAYLIST_URL",
+    "https://soundcloud.com/prodpxnda/sets/lil-peep-unreleased",
+)
+_DEFAULT_SC_EMBED = (
+    "https://w.soundcloud.com/player/?url="
+    + quote(SOUNDCLOUD_PLAYLIST_URL, safe="")
+    + "&color=%23f2a7c1&auto_play=false&hide_related=true&show_comments=false"
+    + "&show_user=true&show_reposts=false&show_teaser=false&visual=false"
+)
+SOUNDCLOUD_EMBED_URL = os.getenv("SOUNDCLOUD_EMBED_URL", _DEFAULT_SC_EMBED)
+YOUTUBE_CHANNEL_ID = os.getenv(
+    "YOUTUBE_CHANNEL_ID", "UCY_Sr229Z-eLVUSh1elI_7w"
+)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -33,12 +60,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-(y9#84$h_5n)$mwr94ks0nthx%on*%c1quo)gm=8t571!wd#dg"
+DJANGO_SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "").strip()
+SECRET_KEY = DJANGO_SECRET_KEY or "django-insecure-local-development-only"
+DEBUG = os.getenv("DJANGO_DEBUG", "true").strip().lower() in {
+    "1", "true", "yes", "on"
+}
+if not DEBUG and not DJANGO_SECRET_KEY:
+    raise ImproperlyConfigured("Set DJANGO_SECRET_KEY when DJANGO_DEBUG is false.")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+    if host.strip()
+]
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 
 # Application definition
 
@@ -118,9 +153,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "uk"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = os.getenv("MIRROR_TIMEZONE", "Europe/Kyiv")
 
 USE_I18N = True
 

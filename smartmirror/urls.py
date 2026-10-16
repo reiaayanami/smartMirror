@@ -25,4 +25,12 @@ urlpatterns = [
     path("", include("closet.urls")),
     path("", include("mirror.urls")),
     path("", include("ml_models.urls")),
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+]
+
+# Prefer live app static in DEBUG so vision/.jpe images show without collectstatic.
+if settings.DEBUG:
+    from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+
+    urlpatterns += staticfiles_urlpatterns()
+else:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

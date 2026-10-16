@@ -10,6 +10,8 @@ env/
 .venv/
 .env
 credentials
+credentials.json
+*-service-account.json
 */site-packages/
 
 # Django specific
@@ -44,3 +46,4 @@ tests/.coverage
 # Ignore vision board images
 mirror/static/mirror/vision/*
 closet/static/closet/inventory/*
+mirror/static/mirror/data/faces.json

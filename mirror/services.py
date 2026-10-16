@@ -72,15 +72,13 @@ class MCPService:
 # This function will be used by views to get the service instance
 async def get_mcp_service():
     service = await MCPService.get_instance()
-    # It's assumed connect() is called during ASGI startup.
-    # If there's a chance of disconnection, add a check and reconnect attempt here or in process_query.
     if not service.is_connected and not service.client.session:
         logger.warning("MCPService not connected. Attempting to connect on demand.")
         try:
-            await service.connect()  # Try to connect if not already
+            await service.connect()
         except Exception as e:
             logger.error(
                 f"On-demand connection failed for MCPService: {e}", exc_info=True
             )
-            raise  # Fail if on-demand connection doesn't work
+            return service
     return service

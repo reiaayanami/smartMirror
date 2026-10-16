@@ -112,8 +112,32 @@ async function loadTasks() {
   });
 }
 
+async function toggleTaskByName(name, done = true) {
+  const fuzzy = window.MirrorCommands?.fuzzyIncludes || ((a, b) =>
+    String(a).toLowerCase().includes(String(b).toLowerCase())
+  );
+  const list = document.getElementById("task-list");
+  if (!list) return null;
+  const items = list.querySelectorAll("li.list-group-item");
+  for (const li of items) {
+    const checkbox = li.querySelector('input[type="checkbox"]');
+    const labelEl = li.querySelector("span");
+    const label = (labelEl?.textContent || li.textContent || "").trim();
+    if (!checkbox || !fuzzy(label, name)) continue;
+    const wantDone = !!done;
+    if (checkbox.checked === wantDone) return label;
+    checkbox.checked = wantDone;
+    checkbox.dispatchEvent(new Event("change", { bubbles: true }));
+    return label;
+  }
+  return null;
+}
+
 document.addEventListener("DOMContentLoaded", loadTasks);
 document.addEventListener("reload-task-list", loadTasks);
 setInterval(() => {
   document.dispatchEvent(new Event("reload-task-list"));
 }, 10 * 60 * 1000);
+
+window.MirrorUI = window.MirrorUI || {};
+window.MirrorUI.toggleTaskByName = toggleTaskByName;

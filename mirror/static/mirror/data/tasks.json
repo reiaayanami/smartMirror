@@ -1,0 +1,22 @@
+[
+  {
+    "id": "t1",
+    "title": "Підібрати образ на день",
+    "status": "In progress"
+  },
+  {
+    "id": "t2",
+    "title": "Перевірити косметичку",
+    "status": "Not started"
+  },
+  {
+    "id": "t3",
+    "title": "Подивитись 1 makeup tutorial",
+    "status": "Not started"
+  },
+  {
+    "id": "t4",
+    "title": "Оновити плейлист настрою",
+    "status": "Not started"
+  }
+]

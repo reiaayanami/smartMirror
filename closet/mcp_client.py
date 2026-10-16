@@ -20,7 +20,7 @@ class MCPClient:
         self.session: Optional[ClientSession] = None
         self.exit_stack = AsyncExitStack()
         self.genai_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-        self.model_id = "gemini-2.0-flash"
+        self.model_id = (os.getenv("GEMINI_MODEL") or "gemini-3.6-flash").strip() or "gemini-3.6-flash"
         self.history: list[types.Content] = []
         self.interaction_service_url = INTERACTION_SERVICE_URL
         self.fake = fake

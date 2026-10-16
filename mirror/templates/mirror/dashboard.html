@@ -1,190 +1,437 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>FuekOS SmartMirror</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
-    {% load static %}
-    {% csrf_token %}
-    <link href="{% static 'mirror/css/dashboard.css' %}" rel="stylesheet">
-</head>
-<body class="d-flex flex-column min-vh-100 justify-bewteen" data-bs-theme="dark">
-<main class="flex-grow-1">
-<div class="top-bar mt-2 container-fluid">
-  <div class="row">
-    <div class="col-6">
-      <div id="clock" class="col-12 text-start clock">HH:MM:ss</div>
-      <div class="fadable affirmations">
-        <table class="bg-opacity-25 content-bg pb-3">
-          <tbody>
-            <tr>
-              <td class="text-center align-middle">
-                <p class="affirmations-title">DAILY AFFIRMATIONS</p>
-                <p id="affirmations" class="affirmations-text">
-                  💖Affirmations go here 💖
-                </p>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <div class="col-6">
-      <div class="info-bar">
-      <table>
-        <tbody>
-          <tr>
-            <td id="weather" class="fadable weather text-start">TBA: Weather Forecast</td>
-            <td>
-              <table><tbody><tr>
-                <td id="dock" class="text-end">
-                  <button disabled class="fadable btn btn-sm me-2" title="Fue’s Closet (coming soon)">👗</button>
-                  <a href="/voice"><button class="fadable btn btn-sm me-2" title="Voice Mode">🎤</button></a>
-                  <button class="btn btn-sm" id="btn-mirror" title="Mirror Mode">🪞</button>
-                </td>
-              </tr></tbody></table>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      </div>
-      <div id="player" class="fadable">
-        <iframe style="border-radius:12px; border-color: black;"
-          src="https://open.spotify.com/embed/playlist/0hw7nfcUOOYFeKctlhQcpp?utm_source=generator&theme=0"
-          width="100%" height="352px" frameBorder="0" allowfullscreen=""
-          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy">
-        </iframe>
-      </div>
-    </div>
-  </div>
-</div>
-<div class="container-fluid p-2">
-    <div class="row g-2">
-        <div class="col-md-6">
-            <div class="fadable focus-container calendar content-bg bg-opacity-25 p-3 rounded mb-2">
-              <button class="btn btn-sm btn-focus" data-focus-target="agenda-list" data-focus-size="lg">🔍</button>
-                <div class="fw-bold mb-2 focus-title">📆 Calendar</div>
-              <div class="card-content-wrapper">
-                <div id="agenda-list">
-                </div>
-              </div>
-            </div>
-            <div class="fadable focus-container daily-tasks content-bg bg-opacity-25 p-3 rounded" id="task-box" style="overflow-y: auto;">
-              <button class="btn btn-sm btn-focus" data-focus-target="task-list" data-focus-size="xl">🔍</button>
-              <div class="fw-bold mb-2 focus-title">🧠 Today’s Tasks</div>
-              <div class="card-content-wrapper">
-              <div class="task-scroll">
-                <ul id="task-list" class="list-group small">
-                  <li class="text-muted"><i>Loading today's tasks...</i></li>
-                </ul>
-              </div>
-              </div>
-            </div>
-        </div>
-        <div class="fadable routines col-md-6">
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ mirror_name }}</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Manrope:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    {% load static %} {% csrf_token %}
+    <link href="{% static 'mirror/css/dashboard.css' %}?v=3" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="ambient ambient-a"></div>
+    <div class="ambient ambient-b"></div>
 
-          <div class="habit-section focus-container morning-routine content-bg bg-opacity-25 p-3 rounded mb-2">
-            <button class="btn btn-sm btn-focus" data-focus-target="morning-list" data-focus-size="md">🔍</button>
-            <div class="fw-bold mb-2 " data-target="#morning-list">
-              <span class="caret-icon me-2">▶</span>
-              <span class="focus-title">☀️ Morning Routine</span>
+    <button
+      type="button"
+      id="voice-gate"
+      class="voice-gate"
+      aria-hidden="false"
+    >
+      <span class="voice-gate__title">GlowMirror</span>
+      <span class="voice-gate__text"
+        >Натисни будь-де на екран, щоб увімкнути голос</span
+      >
+      <span class="voice-gate__hint"
+        >Потрібен Chrome / Chromium · дозволь мікрофон</span
+      >
+    </button>
+
+    <header class="mirror-header">
+      <div class="brand-block">
+        <p class="brand-name">{{ mirror_name }}</p>
+        <p id="face-greeting" class="face-greeting">Привіт, красуне</p>
+      </div>
+      <div class="time-block">
+        <div id="clock" class="clock">--:--</div>
+        <div id="date-line" class="date-line">—</div>
+        <div id="weather" class="weather">Погода…</div>
+      </div>
+      <div class="dock">
+        <span
+          id="voice-handsfree"
+          class="voice-handsfree"
+          title="Статус голосового керування"
+          >👂 старт…</span
+        >
+        <button
+          class="dock-btn"
+          id="btn-voice-toggle"
+          type="button"
+          title="Панель голосу"
+        >
+          🎤
+        </button>
+        <a
+          class="dock-btn dock-btn-link"
+          href="/voice"
+          title="Повний голосовий чат"
+          >💬</a
+        >
+        <button
+          class="dock-btn"
+          id="btn-face-enroll"
+          title="Запам'ятати обличчя"
+        >
+          📸
+        </button>
+        <button class="dock-btn" id="btn-gesture" title="Жести камери">
+          ✋
+        </button>
+        <button class="dock-btn" id="btn-mirror" title="Режим дзеркала">
+          🪞
+        </button>
+      </div>
+    </header>
+
+    <aside id="voice-panel" class="voice-panel" aria-hidden="true">
+      <div class="voice-panel__head">
+        <div>
+          <p class="voice-panel__title">Голос дзеркала</p>
+          <p id="voice-status" class="voice-panel__status">
+            Слухаю «дзеркало»…
+          </p>
+        </div>
+        <button
+          type="button"
+          id="btn-voice-close"
+          class="dock-btn"
+          title="Закрити"
+        >
+          ✕
+        </button>
+      </div>
+      <div id="voice-log" class="voice-log" aria-live="polite"></div>
+      <p id="voice-interim" class="voice-interim"></p>
+      <div class="voice-panel__controls">
+        <div class="voice-settings-row">
+          <label for="voice-voice-select">Голос Gemini</label>
+          <select id="voice-voice-select" aria-label="Голос Gemini">
+            <option value="Aoede">Aoede · легкий</option>
+            <option value="Kore">Kore · впевнений</option>
+            <option value="Leda">Leda · молодий</option>
+            <option value="Zephyr">Zephyr · ясний</option>
+          </select>
+          <button
+            id="btn-voice-preview"
+            type="button"
+            title="Прослухати голос"
+            aria-label="Прослухати голос"
+          >
+            ▶
+          </button>
+        </div>
+        <button
+          type="button"
+          id="btn-voice-mic"
+          class="voice-mic-btn"
+          title="Увімкнути / вимкнути мікрофон"
+        >
+          🎤
+        </button>
+        <div class="voice-text-row">
+          <input
+            id="voice-text-input"
+            type="text"
+            placeholder="Або напиши команду…"
+            autocomplete="off"
+          />
+          <button type="button" id="btn-voice-send" class="soft-btn">➜</button>
+        </div>
+      </div>
+      <p class="voice-panel__hint">
+        Без рук: скажи «дзеркало» → музика, макіяж, далі, погода, ранкова
+        рутина, тихо. Або просто питай.
+      </p>
+    </aside>
+
+    <main class="mirror-grid">
+      <section class="panel affirmations fadable">
+        <p class="panel-kicker">Афірмація дня</p>
+        <p id="affirmations" class="affirmations-text">Завантаження…</p>
+        <p id="beauty-tip" class="beauty-tip">Beauty tip з’явиться тут</p>
+      </section>
+
+      <section class="panel media-panel fadable">
+        <div class="panel-tabs">
+          <button class="tab active" data-tab="music">SoundCloud</button>
+          <button class="tab" data-tab="tutorials">Макіяж / YouTube</button>
+        </div>
+        <div id="tab-music" class="tab-pane active">
+          <div id="player">
+            <iframe
+              id="soundcloud-frame"
+              allow="autoplay"
+              src="{{ soundcloud_url }}"
+              loading="lazy"
+            ></iframe>
+          </div>
+        </div>
+        <div id="tab-tutorials" class="tab-pane">
+          <div class="tutorial-layout">
+            <div class="tutorial-player-wrap">
+              <iframe
+                id="youtube-frame"
+                src=""
+                title="Makeup tutorial"
+                referrerpolicy="strict-origin-when-cross-origin"
+                allow="
+                  accelerometer;
+                  autoplay;
+                  clipboard-write;
+                  encrypted-media;
+                  gyroscope;
+                  picture-in-picture;
+                "
+                allowfullscreen
+                loading="lazy"
+              ></iframe>
             </div>
-            <div class="card-content-wrapper">
+            <div class="tutorial-side">
+              <p id="tutorial-title" class="tutorial-title">Туторіал</p>
+              <div class="tutorial-controls">
+                <button id="tutorial-prev" class="soft-btn">←</button>
+                <button id="tutorial-next" class="soft-btn">→</button>
+              </div>
+              <ul id="tutorial-list" class="tutorial-list"></ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel routines fadable">
+        <div class="habit-section focus-container morning-routine">
+          <button
+            class="btn btn-sm btn-focus"
+            data-focus-target="morning-list"
+            data-focus-size="md"
+          >
+            🔍
+          </button>
+          <div class="section-head" data-target="#morning-list">
+            <span class="caret-icon me-2">▶</span>
+            <span class="focus-title">Ранкова рутина</span>
+          </div>
+          <div class="card-content-wrapper">
             <ul id="morning-list" class="list-group small">
-              <li class="text-muted"><i>Loading today's morning routine...</i></li>
+              <li class="text-muted"><i>Завантаження…</i></li>
             </ul>
           </div>
-          </div>
+        </div>
 
-          <div class="habit-section focus-container evening-routine content-bg bg-opacity-25 p-3 rounded mb-2">
-            <button class="btn btn-sm btn-focus" data-focus-target="evening-list" data-focus-size="md">🔍</button>
-            <div class="fw-bold mb-2" data-target="#evening-list">
-              <span class="caret-icon me-2">▶</span>
-              <span class="focus-title">🌙 Evening Routine</span>
-            </div>
-            <div class="card-content-wrapper">
+        <div class="habit-section focus-container evening-routine">
+          <button
+            class="btn btn-sm btn-focus"
+            data-focus-target="evening-list"
+            data-focus-size="md"
+          >
+            🔍
+          </button>
+          <div class="section-head" data-target="#evening-list">
+            <span class="caret-icon me-2">▶</span>
+            <span class="focus-title">Вечірня рутина</span>
+          </div>
+          <div class="card-content-wrapper">
             <ul id="evening-list" class="list-group small">
-              <li class="text-muted"><i>Loading today's evening routine...</i></li>
+              <li class="text-muted"><i>Завантаження…</i></li>
             </ul>
-            </div>
           </div>
+        </div>
 
-          <div class="habit-section focus-container daily-habits content-bg bg-opacity-25 p-3 rounded mb-2">
-            <button class="btn btn-sm btn-focus" data-focus-target="daily-list" data-focus-size="md">🔍</button>
-            <div class="fw-bold mb-2" data-target="#daily-list">
-              <span class="caret-icon me-2">▶</span>
-              <span class="focus-title">🌸 Daily Habits</span>
-            </div>
-            <div class="card-content-wrapper">
+        <div class="habit-section focus-container daily-habits">
+          <button
+            class="btn btn-sm btn-focus"
+            data-focus-target="daily-list"
+            data-focus-size="md"
+          >
+            🔍
+          </button>
+          <div class="section-head" data-target="#daily-list">
+            <span class="caret-icon me-2">▶</span>
+            <span class="focus-title">Щоденні звички</span>
+          </div>
+          <div class="card-content-wrapper">
             <ul id="daily-list" class="list-group small">
-              <li class="text-muted"><i>Loading today's daily habits...</i></li>
+              <li class="text-muted"><i>Завантаження…</i></li>
             </ul>
-            </div>
           </div>
+        </div>
 
-          <div class="habit-section focus-container weekly-habits content-bg bg-opacity-25 p-3 rounded">
-            <button class="btn btn-sm btn-focus" data-focus-target="weekly-list" data-focus-size="md">🔍</button>
-            <div class="fw-bold mb-2" data-target="#weekly-list">
-              <span class="caret-icon me-2">▶</span>
-              <span class="focus-title">✨ Weekly Habits</span>
-            </div>
-            <div class="card-content-wrapper">
+        <div class="habit-section focus-container weekly-habits">
+          <button
+            class="btn btn-sm btn-focus"
+            data-focus-target="weekly-list"
+            data-focus-size="md"
+          >
+            🔍
+          </button>
+          <div class="section-head" data-target="#weekly-list">
+            <span class="caret-icon me-2">▶</span>
+            <span class="focus-title">Тиждень</span>
+          </div>
+          <div class="card-content-wrapper">
             <ul id="weekly-list" class="list-group small">
-              <li class="text-muted"><i>Loading weekly habits...</i></li>
+              <li class="text-muted"><i>Завантаження…</i></li>
             </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel tasks-cal fadable">
+        <div class="focus-container calendar">
+          <button
+            class="btn btn-sm btn-focus"
+            data-focus-target="agenda-list"
+            data-focus-size="lg"
+          >
+            🔍
+          </button>
+          <div class="focus-title">Календар</div>
+          <div class="card-content-wrapper">
+            <div id="agenda-list"></div>
+          </div>
+        </div>
+        <div class="focus-container daily-tasks" id="task-box">
+          <button
+            class="btn btn-sm btn-focus"
+            data-focus-target="task-list"
+            data-focus-size="xl"
+          >
+            🔍
+          </button>
+          <div class="focus-title">На сьогодні</div>
+          <div class="card-content-wrapper">
+            <div class="task-scroll">
+              <ul id="task-list" class="list-group small">
+                <li class="text-muted"><i>Завантаження задач…</i></li>
+              </ul>
             </div>
           </div>
         </div>
-    </div>
-</div>
+      </section>
 
-<div class="flex-grow-1 d-flex flex-column">
-  <div id="vision-board" class="fadable vision-board content-bg bg-opacity-25 rounded d-flex overflow-hidden gap-2">
-  </div>
-</div>
-<div class="modal fade" id="visionImageModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-centered">
-    <div class="modal-content bg-black text-white">
-      <div class="modal-header border-0">
-        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div id="visionImageModalBody" class="modal-body text-center">
-        <img id="visionImage" src="" class="img-fluid rounded shadow">
-      </div>
-    </div>
-  </div>
-</div>
-</main>
-<div class="marquee pb-1 text-center align-middle fs-5 fw-semibold">
-    <div class="pl-2 marquee__item">YOU ARE WORTHY OF ALL YOUR DREAMS AND GOALS · YOU ARE WORTHY OF ALL YOUR DREAMS AND GOALS · YOU ARE WORTHY OF ALL YOUR DREAMS AND GOALS · YOU ARE WORTHY OF ALL YOUR DREAMS AND GOALS ·&nbsp;</div>
-    <div class="marquee__item">YOU ARE WORTHY OF ALL YOUR DREAMS AND GOALS · YOU ARE WORTHY OF ALL YOUR DREAMS AND GOALS · YOU ARE WORTHY OF ALL YOUR DREAMS AND GOALS · YOU ARE WORTHY OF ALL YOUR DREAMS AND GOALS ·&nbsp;</div>
+      <section class="panel vision fadable">
+        <div class="vision-head">
+          <span class="focus-title">Vision board</span>
+          <span class="hint">Додай фото в mirror/static/mirror/vision</span>
+        </div>
+        <div id="vision-board" class="vision-board"></div>
+      </section>
+    </main>
 
-</div>
-<!-- Focus Modal -->
-<div class="modal fade" id="focusModal" tabindex="-1" aria-labelledby="focusModalLabel" aria-hidden="true">
-  <div class="modal-dialog" id="focusModalDialog">
-    <div class="modal-content bg-black text-white">
-      <div class="modal-header border-0 justify-content-center position-relative">
-        <h5 class="modal-title text-center w-100" id="focusModalLabel">Focus Mode</h5>
-        <button type="button" class="btn-close btn-close-white position-absolute end-0 me-3" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="camera-dock fadable">
+      <video id="mirror-cam" playsinline autoplay muted></video>
+      <canvas id="mirror-cam-overlay"></canvas>
+      <p id="gesture-status" class="gesture-status">Камера вимкнена</p>
+    </div>
+
+    <div class="marquee">
+      <div class="marquee__item">
+        ти гідна своїх мрій · soft glam · glow skin · kind mornings ·&nbsp;
       </div>
-      <div class="modal-body" id="focusModalBody">
-        <!-- Section content will be injected here -->
+      <div class="marquee__item">
+        ти гідна своїх мрій · soft glam · glow skin · kind mornings ·&nbsp;
       </div>
     </div>
-  </div>
-</div>
-<script src="{% static 'mirror/js/utils.js' %}"></script>
-<script src="{% static 'mirror/js/clock.js' %}"></script>
-<script src="{% static 'mirror/js/weather.js' %}"></script>
-<script src="{% static 'mirror/js/daily_habits.js' %}"></script>
-<script src="{% static 'mirror/js/affirmations.js' %}"></script>
-<script src="{% static 'mirror/js/daily_tasks.js' %}"></script>
-<script src="{% static 'mirror/js/agenda.js' %}"></script>
-<script src="{% static 'mirror/js/vision_board.js' %}"></script>
-<script src="{% static 'mirror/js/mirror_mode.js' %}"></script>
-<script src="{% static 'mirror/js/focus_mode.js' %}"></script>
-<script src="{% static 'mirror/js/daily_reload.js' %}"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
-</body>
+
+    <div
+      class="modal fade"
+      id="visionImageModal"
+      tabindex="-1"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header border-0">
+            <button
+              type="button"
+              class="btn-close ms-auto"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div id="visionImageModalBody" class="modal-body text-center">
+            <img
+              id="visionImage"
+              src=""
+              class="img-fluid rounded shadow"
+              alt=""
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="focusModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog" id="focusModalDialog">
+        <div class="modal-content">
+          <div
+            class="modal-header border-0 justify-content-center position-relative"
+          >
+            <h5 class="modal-title text-center w-100" id="focusModalLabel">
+              Focus
+            </h5>
+            <button
+              type="button"
+              class="btn-close position-absolute end-0 me-3"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body" id="focusModalBody"></div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="faceEnrollModal"
+      tabindex="-1"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header border-0">
+            <h5 class="modal-title">Запам'ятати обличчя</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-2">Подивись у камеру і введи ім'я.</p>
+            <input
+              id="face-name"
+              class="form-control mb-3"
+              placeholder="Наприклад: Юля"
+            />
+            <p id="face-enroll-status" class="small"></p>
+          </div>
+          <div class="modal-footer border-0">
+            <button id="face-enroll-save" class="soft-btn">Зберегти</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="{% static 'mirror/js/utils.js' %}"></script>
+    <script src="{% static 'mirror/js/clock.js' %}"></script>
+    <script src="{% static 'mirror/js/weather.js' %}"></script>
+    <script src="{% static 'mirror/js/daily_habits.js' %}?v=3"></script>
+    <script src="{% static 'mirror/js/affirmations.js' %}"></script>
+    <script src="{% static 'mirror/js/daily_tasks.js' %}?v=2"></script>
+    <script src="{% static 'mirror/js/agenda.js' %}"></script>
+    <script src="{% static 'mirror/js/vision_board.js' %}"></script>
+    <script src="{% static 'mirror/js/mirror_mode.js' %}?v=2"></script>
+    <script src="{% static 'mirror/js/focus_mode.js' %}"></script>
+    <script src="{% static 'mirror/js/daily_reload.js' %}"></script>
+    <script src="{% static 'mirror/js/media_tabs.js' %}?v=5"></script>
+    <script src="{% static 'mirror/js/tutorials.js' %}?v=3"></script>
+    <script src="{% static 'mirror/js/beauty.js' %}"></script>
+    <script src="{% static 'mirror/js/mirror_voice.js' %}?v=3"></script>
+    <script src="{% static 'mirror/js/mirror_commands.js' %}?v=5"></script>
+    <script src="https://w.soundcloud.com/player/api.js"></script>
+    <script src="{% static 'mirror/js/face_memory.js' %}?v=2"></script>
+    <script src="{% static 'mirror/js/dashboard_voice.js' %}?v=5"></script>
+    <script src="{% static 'mirror/js/gestures.js' %}?v=2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
 </html>

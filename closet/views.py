@@ -4,6 +4,7 @@ from django.conf import settings
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.http import JsonResponse
 from datetime import date, timedelta
+from django.views.decorators.http import require_http_methods
 
 from notion_client import Client
 from . import database_functions

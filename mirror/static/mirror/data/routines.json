@@ -1,0 +1,100 @@
+{
+  "morning": [
+    {
+      "id": "m1",
+      "title": "Умитись і тонер",
+      "done": false
+    },
+    {
+      "id": "m2",
+      "title": "Сироватка + крем SPF",
+      "done": false
+    },
+    {
+      "id": "m3",
+      "title": "Склянка води",
+      "done": true
+    },
+    {
+      "id": "m4",
+      "title": "Легкий макіяж / glow",
+      "done": false
+    },
+    {
+      "id": "m5",
+      "title": "Афірмація перед дзеркалом",
+      "done": false
+    }
+  ],
+  "evening": [
+    {
+      "id": "e1",
+      "title": "Зняти макіяж",
+      "done": false
+    },
+    {
+      "id": "e2",
+      "title": "Подвійне очищення",
+      "done": false
+    },
+    {
+      "id": "e3",
+      "title": "Маска або сироватка",
+      "done": false
+    },
+    {
+      "id": "e4",
+      "title": "Нічний крем",
+      "done": false
+    },
+    {
+      "id": "e5",
+      "title": "Підготувати образ на завтра",
+      "done": true
+    }
+  ],
+  "daily": [
+    {
+      "id": "d1",
+      "title": "Випити 1.5–2л води",
+      "done": false
+    },
+    {
+      "id": "d2",
+      "title": "Рух / розтяжка 10 хв",
+      "done": false
+    },
+    {
+      "id": "d3",
+      "title": "Скрін-детокс 30 хв",
+      "done": false
+    },
+    {
+      "id": "d4",
+      "title": "Записати 3 вдячності",
+      "done": false
+    }
+  ],
+  "weekly": [
+    {
+      "id": "w1",
+      "title": "Скраб / пілінг",
+      "done": false
+    },
+    {
+      "id": "w2",
+      "title": "Маска для волосся",
+      "done": false
+    },
+    {
+      "id": "w3",
+      "title": "Розібрати косметичку",
+      "done": false
+    },
+    {
+      "id": "w4",
+      "title": "Новий туторіал з макіяжу",
+      "done": true
+    }
+  ]
+}

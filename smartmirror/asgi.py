@@ -34,26 +34,28 @@ async def lifespan_handler(scope, receive, send):
                 logger.info("Lifespan startup: Initializing MCPService...")
                 mcp_service_instance = await MCPService.get_instance()
                 await mcp_service_instance.connect()
-                await send({"type": "lifespan.startup.complete"})
                 logger.info("MCPService startup complete.")
             except Exception as e:
-                logger.error(f"Error during MCPService startup: {e}", exc_info=True)
-                await send({"type": "lifespan.startup.failed", "message": str(e)})
+                logger.warning(f"MCPService skipped/failed: {e}. Starting server without MCP.")
+                mcp_service_instance = None
+            
+            # Повідомляємо Uvicorn про успішний старт, щоб він не завершував процес
+            await send({"type": "lifespan.startup.complete"})
+
         elif message["type"] == "lifespan.shutdown":
             try:
                 logger.info("Lifespan shutdown: Shutting down MCPService...")
                 if mcp_service_instance:
                     await mcp_service_instance.shutdown()
-                await send({"type": "lifespan.shutdown.complete"})
                 logger.info("MCPService shutdown complete.")
             except Exception as e:
                 logger.error(f"Error during MCPService shutdown: {e}", exc_info=True)
-                await send({"type": "lifespan.shutdown.failed", "message": str(e)})
+            
+            await send({"type": "lifespan.shutdown.complete"})
             return
 
 
-# Get WebSocket URL patterns directly from ml_modelsrouting
-# Ensure ml_models.routing defines a list named 'websocket_urlpatterns'
+# Get WebSocket URL patterns directly from ml_models.routing
 websocket_routes = getattr(ml_models.routing, "websocket_urlpatterns", [])
 
 if not websocket_routes:
@@ -66,7 +68,7 @@ application = ProtocolTypeRouter(
         "http": django_asgi_app,
         "websocket": AuthMiddlewareStack(
             URLRouter(
-                websocket_routes  # Use the routes from ml_models.routing directly
+                websocket_routes
             )
         ),
         "lifespan": lifespan_handler,

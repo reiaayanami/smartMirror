@@ -39,7 +39,7 @@ async function loadAgenda() {
   container.innerHTML = "";
 
   if (!data.events || data.events.length === 0) {
-    container.innerHTML = "<div class='text-muted'>No upcoming events.</div>";
+    container.innerHTML = "<div class='text-muted'>Немає подій · підключи Google Calendar у .env або просто насолоджуйся днем ✨</div>";
     return;
   }
 
