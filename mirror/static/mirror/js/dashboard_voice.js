@@ -123,7 +123,7 @@
         }
         micStream = null;
       }, 800);
-      return true;
+      return { ok: true };
     } catch (err) {
       console.warn("mic permission", err);
       return { ok: false, error: err };
